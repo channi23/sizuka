@@ -55,7 +55,7 @@ Both NestJS and Python share the same **PostgreSQL (Supabase)** instance.
 ### 1. Clone and enter the repo
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/channi23/sizuka.git
 cd sizuka
 ```
 
