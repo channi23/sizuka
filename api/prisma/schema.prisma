@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Job {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyName String   @map("company_name")
+  jdRaw       String   @map("jd_raw")
+  jdParsed    Json?    @map("jd_parsed")
+  status      String   @default("queued")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  candidates     Candidate[]
+  pipelineEvents PipelineEvent[]
+
+  @@map("jobs")
+}
+
+model Candidate {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jobId               String   @map("job_id") @db.Uuid
+  name                String?
+  email               String?
+  source              String?
+  profileUrl          String?  @map("profile_url")
+  bio                 String?
+  skillsRaw           Json?    @map("skills_raw")
+  matchScore          Float?   @map("match_score")
+  interestScore       Float?   @map("interest_score")
+  finalScore          Float?   @map("final_score")
+  matchExplanation    String?  @map("match_explanation")
+  interestExplanation String?  @map("interest_explanation")
+  skillsMatched       Json?    @map("skills_matched")
+  skillsMissing       Json?    @map("skills_missing")
+  emailStatus         String?  @default("pending") @map("email_status")
+  resendEmailId       String?  @map("resend_email_id")
+  outreachSubject     String?  @map("outreach_subject")
+  outreachBody        String?  @map("outreach_body")
+  replyText           String?  @map("reply_text")
+  conversationHistory Json?    @map("conversation_history")
+  conversationTurns   Int      @default(0) @map("conversation_turns")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("candidates")
+}
+
+model PipelineEvent {
+  id        Int      @id @default(autoincrement())
+  jobId     String   @map("job_id") @db.Uuid
+  stage     String?
+  message   String?
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("pipeline_events")
+}
