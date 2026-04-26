@@ -37,17 +37,7 @@ let WebhooksService = WebhooksService_1 = class WebhooksService {
             where: { id: candidate.id },
             data: { replyText: body, emailStatus: 'replied' },
         });
-        const agentUrl = this.config.get('PYTHON_SERVICE_URL', 'http://localhost:8000');
-        try {
-            await axios_1.default.post(`${agentUrl}/conversation/respond`, {
-                candidate_id: candidate.id,
-                reply_text: body,
-                reply_subject: subject,
-            });
-        }
-        catch (err) {
-            this.logger.error(`Failed to trigger agent conversation: ${err.message}`);
-        }
+        await this._triggerAgent(candidate.id, body, subject);
         return { ok: true };
     }
     async handleDemoReply(candidateId, replyText) {
@@ -60,18 +50,22 @@ let WebhooksService = WebhooksService_1 = class WebhooksService {
             where: { id: candidateId },
             data: { replyText, emailStatus: 'replied' },
         });
+        await this._triggerAgent(candidateId, replyText, 'Re: outreach');
+        return { ok: true, candidate_id: candidateId };
+    }
+    async _triggerAgent(candidateId, replyText, subject) {
         const agentUrl = this.config.get('PYTHON_SERVICE_URL', 'http://localhost:8000');
         try {
             await axios_1.default.post(`${agentUrl}/conversation/respond`, {
                 candidate_id: candidateId,
                 reply_text: replyText,
-                reply_subject: 'Re: outreach',
+                reply_subject: subject,
             });
+            this.logger.log(`Triggered conversation for candidate ${candidateId}`);
         }
         catch (err) {
             this.logger.error(`Failed to trigger agent conversation: ${err.message}`);
         }
-        return { ok: true, candidate_id: candidateId };
     }
 };
 exports.WebhooksService = WebhooksService;

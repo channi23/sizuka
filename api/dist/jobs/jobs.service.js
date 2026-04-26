@@ -17,6 +17,9 @@ const common_1 = require("@nestjs/common");
 const bullmq_1 = require("@nestjs/bullmq");
 const bullmq_2 = require("bullmq");
 const prisma_service_1 = require("../prisma/prisma.service");
+const QUEUE_ATTEMPTS = 3;
+const QUEUE_BACKOFF_MS = 5000;
+const SENT_STATUSES = ['sent', 'opened', 'replied', 'failed'];
 let JobsService = class JobsService {
     constructor(prisma, pipelineQueue) {
         this.prisma = prisma;
@@ -26,53 +29,16 @@ let JobsService = class JobsService {
         const job = await this.prisma.job.create({
             data: { companyName: dto.company_name, jdRaw: dto.jd_raw },
         });
-        await this.pipelineQueue.add('run', { job_id: job.id }, { attempts: 3, backoff: { type: 'exponential', delay: 5000 } });
+        await this.pipelineQueue.add('run', { job_id: job.id }, { attempts: QUEUE_ATTEMPTS, backoff: { type: 'exponential', delay: QUEUE_BACKOFF_MS } });
         return job;
     }
     async findAll() {
         const jobs = await this.prisma.job.findMany({ orderBy: { createdAt: 'desc' } });
-        const enriched = await Promise.all(jobs.map(async (job) => {
-            const agg = await this.prisma.candidate.aggregate({
-                where: { jobId: job.id },
-                _avg: { matchScore: true },
-                _count: { id: true },
-            });
-            const emailsSent = await this.prisma.candidate.count({
-                where: { jobId: job.id, emailStatus: { in: ['sent', 'opened', 'replied', 'failed'] } },
-            });
-            const replies = await this.prisma.candidate.count({
-                where: { jobId: job.id, emailStatus: 'replied' },
-            });
-            return {
-                ...job,
-                candidateCount: agg._count.id,
-                matchAvg: Math.round((agg._avg.matchScore ?? 0) * 100),
-                emailsSent,
-                replies,
-            };
-        }));
-        return enriched;
+        return Promise.all(jobs.map((job) => this._enrichJob(job)));
     }
     async findOne(id) {
         const job = await this.prisma.job.findUniqueOrThrow({ where: { id } });
-        const agg = await this.prisma.candidate.aggregate({
-            where: { jobId: id },
-            _avg: { matchScore: true },
-            _count: { id: true },
-        });
-        const emailsSent = await this.prisma.candidate.count({
-            where: { jobId: id, emailStatus: { in: ['sent', 'opened', 'replied', 'failed'] } },
-        });
-        const replies = await this.prisma.candidate.count({
-            where: { jobId: id, emailStatus: 'replied' },
-        });
-        return {
-            ...job,
-            candidateCount: agg._count.id,
-            matchAvg: Math.round((agg._avg.matchScore ?? 0) * 100),
-            emailsSent,
-            replies,
-        };
+        return this._enrichJob(job);
     }
     async getShortlist(id, matchWeight = 0.6, interestWeight = 0.4) {
         const candidates = await this.prisma.candidate.findMany({
@@ -96,6 +62,28 @@ let JobsService = class JobsService {
             orderBy: { finalScore: 'desc' },
             include: { job: { select: { id: true, companyName: true } } },
         });
+    }
+    async _enrichJob(job) {
+        const [agg, emailsSent, replies] = await Promise.all([
+            this.prisma.candidate.aggregate({
+                where: { jobId: job.id },
+                _avg: { matchScore: true },
+                _count: { id: true },
+            }),
+            this.prisma.candidate.count({
+                where: { jobId: job.id, emailStatus: { in: [...SENT_STATUSES] } },
+            }),
+            this.prisma.candidate.count({
+                where: { jobId: job.id, emailStatus: 'replied' },
+            }),
+        ]);
+        return {
+            ...job,
+            candidateCount: agg._count.id,
+            matchAvg: Math.round((agg._avg.matchScore ?? 0) * 100),
+            emailsSent,
+            replies,
+        };
     }
 };
 exports.JobsService = JobsService;

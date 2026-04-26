@@ -17,4 +17,5 @@ export declare class WebhooksService {
         candidate_id: string;
         error?: undefined;
     }>;
+    private _triggerAgent;
 }

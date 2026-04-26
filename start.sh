@@ -23,7 +23,10 @@ check() {
 check docker
 check bun
 check python3
-check uvicorn
+if ! python3 -c "import uvicorn" &>/dev/null; then
+  red "Missing: uvicorn — run: pip install uvicorn"
+  exit 1
+fi
 
 # ── .env checks ───────────────────────────────────────────────────────────────
 if [[ ! -f "$ROOT/api/.env" ]]; then
@@ -58,7 +61,7 @@ open_tab "Sizuka · API" "cd '$ROOT/api' && bun run start:dev"
 sleep 2
 
 green "▶ Opening Python agent (port 8000)..."
-open_tab "Sizuka · Agent" "cd '$ROOT/agent' && uvicorn app.main:app --reload --port 8000"
+open_tab "Sizuka · Agent" "cd '$ROOT/agent' && python3 -m uvicorn app.main:app --reload --port 8000"
 
 sleep 2
 

@@ -36,12 +36,12 @@ export declare class JobsController {
         updatedAt: Date;
         name: string | null;
         jobId: string;
-        matchScore: number | null;
         email: string | null;
         source: string | null;
         profileUrl: string | null;
         bio: string | null;
         skillsRaw: import("@prisma/client/runtime/library").JsonValue | null;
+        matchScore: number | null;
         interestScore: number | null;
         finalScore: number | null;
         matchExplanation: string | null;
@@ -76,12 +76,12 @@ export declare class JobsController {
         updatedAt: Date;
         name: string | null;
         jobId: string;
-        matchScore: number | null;
         email: string | null;
         source: string | null;
         profileUrl: string | null;
         bio: string | null;
         skillsRaw: import("@prisma/client/runtime/library").JsonValue | null;
+        matchScore: number | null;
         interestScore: number | null;
         finalScore: number | null;
         matchExplanation: string | null;
