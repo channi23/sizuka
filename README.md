@@ -1,6 +1,42 @@
 # Sizuka — AI Talent Scouting Agent
 
+## Demo
+
+🎥 Demo Video:
+https://drive.google.com/file/d/1u49YvvJnQzCrJrjRicfDqbwUtPqxiYSw/view?usp=sharing
+
+Watch a complete end-to-end walkthrough showing JD ingestion, candidate discovery, AI scoring, automated outreach, reply handling, and final shortlist generation.
+
+---
+
 An autonomous AI pipeline that takes a Job Description as input, discovers matching candidates from GitHub and Hacker News, scores them, sends personalised outreach emails, and outputs a ranked shortlist — all without recruiter involvement.
+
+---
+
+## Key Features
+
+- Multi-agent AI recruiting workflow
+- GitHub & Hacker News candidate discovery
+- LangGraph orchestration
+- AI-powered candidate scoring
+- Automated personalized outreach
+- Gmail reply handling
+- Real-time pipeline monitoring
+- PostgreSQL + Redis backed architecture
+
+---
+
+### Tech Stack
+
+**Frontend:** React, TypeScript, SSE
+
+**Backend:** NestJS, BullMQ, Redis
+
+**AI Pipeline:** Python, FastAPI, LangGraph, Groq LLM
+
+**Data:** PostgreSQL (Supabase)
+
+**Integrations:** GitHub API, Hacker News API, Resend, Gmail IMAP
 
 ---
 
